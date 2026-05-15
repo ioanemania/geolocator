@@ -1,0 +1,9 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_IP_API_BASE_URL: "http://ip-api.com/json"
+      APP_REQUEST_TIMEOUT: "10.0"
+    restart: unless-stopped

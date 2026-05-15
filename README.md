@@ -8,10 +8,14 @@ A production-quality FastAPI microservice that provides IP address geolocation i
 
 ### Prerequisites
 
+**Docker (recommended)**
+- [Docker](https://docs.docker.com/get-docker/) with Compose
+
+**Local development**
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (`brew install uv` or `pip install uv`)
 
-### Install
+### Install (local)
 
 ```bash
 uv sync
@@ -22,6 +26,16 @@ This creates a `.venv` and installs all runtime and dev dependencies from `uv.lo
 ---
 
 ## Running the Service
+
+### Docker (recommended)
+
+```bash
+docker compose up --build
+```
+
+The service will be available at `http://localhost:8000`.
+
+### Local development
 
 ```bash
 uv run uvicorn app.main:app --reload

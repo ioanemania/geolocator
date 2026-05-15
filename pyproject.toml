@@ -18,6 +18,7 @@ dev = [
     "respx>=0.21.0",
     "ruff>=0.5.0",
     "mypy>=1.10.0",
+    "pre-commit>=3.7.0",
 ]
 
 [tool.ruff]

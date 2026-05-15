@@ -1,5 +1,9 @@
+import ipaddress
 from abc import ABC, abstractmethod
+from pathlib import Path
 
+import geoip2.database
+import geoip2.errors
 import httpx
 
 from app.config import settings
@@ -20,6 +24,15 @@ _IP_API_FAIL_MESSAGES: dict[
     "private range": ReservedIPAddressError,
     "reserved range": ReservedIPAddressError,
 }
+
+
+def _check_reserved(ip: str) -> None:
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError as exc:
+        raise InvalidIPAddressError(f"'{ip}' is not a valid IP address.") from exc
+    if addr.is_private or addr.is_reserved or addr.is_loopback or addr.is_link_local:
+        raise ReservedIPAddressError(f"'{ip}' is a reserved IP address.")
 
 
 class GeolocationProvider(ABC):
@@ -71,4 +84,33 @@ class IPApiProvider(GeolocationProvider):
             timezone=data.get("timezone", ""),
             isp=data.get("isp", ""),
             organization=data.get("org", ""),
+        )
+
+
+class GeoLite2Provider(GeolocationProvider):
+    def __init__(self, db_path: str | Path = settings.geolite2_db_path) -> None:
+        self._reader = geoip2.database.Reader(str(db_path))
+
+    async def get_by_ip(self, ip: str) -> GeolocationResponse:
+        _check_reserved(ip)
+
+        try:
+            record = self._reader.city(ip)
+        except geoip2.errors.AddressNotFoundError as exc:
+            raise GeolocationNotFoundError(f"No geolocation data found for '{ip}'.") from exc
+
+        return GeolocationResponse(
+            ip=ip,
+            country=record.country.name or "",
+            country_code=record.country.iso_code or "",
+            region=record.subdivisions.most_specific.name or "",
+            city=record.city.name or "",
+            postal_code=record.postal.code or "",
+            coordinates=Coordinates(
+                latitude=record.location.latitude or 0.0,
+                longitude=record.location.longitude or 0.0,
+            ),
+            timezone=record.location.time_zone or "",
+            isp="",
+            organization="",
         )

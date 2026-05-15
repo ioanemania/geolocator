@@ -10,5 +10,7 @@ class Settings(BaseSettings):
     ip_api_base_url: str = "http://ip-api.com/json"
     request_timeout: float = 10.0
 
+    geolite2_db_path: str = "data/GeoLite2-City.mmdb"
+
 
 settings = Settings()

@@ -17,3 +17,4 @@ class GeolocationResponse(BaseModel):
     timezone: str = Field(..., examples=["America/New_York"])
     isp: str = Field(..., examples=["Google LLC"])
     organization: str = Field(..., examples=["AS15169 Google LLC"])
+    provider: str = Field(..., examples=["ip-api"])

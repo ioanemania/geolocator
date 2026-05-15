@@ -4,13 +4,20 @@ import respx
 from fastapi.testclient import TestClient
 
 from app.config import settings
+from app.dependencies import get_geolocation_service
 from app.main import create_app
+from app.services.geolocation import GeolocationService, IPApiProvider
 from tests.conftest import IP_API_SUCCESS_PAYLOAD
 
 
 @pytest.fixture()
 def client() -> TestClient:
-    with TestClient(create_app()) as c:
+    http_client = httpx.AsyncClient()
+    application = create_app()
+    application.dependency_overrides[get_geolocation_service] = lambda: GeolocationService(
+        providers=[IPApiProvider(client=http_client)]
+    )
+    with TestClient(application) as c:
         yield c
 
 

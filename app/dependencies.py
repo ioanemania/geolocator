@@ -1,7 +1,12 @@
 from fastapi import Request
 
-from app.services.geolocation import GeolocationService, IPApiProvider
+from app.services.geolocation import GeolocationService, IPApiProvider, GeolocationProvider, GeoLite2Provider
 
 
 def get_geolocation_service(request: Request) -> GeolocationService:
-    return GeolocationService(provider=IPApiProvider(client=request.app.state.http_client))
+    providers: list[GeolocationProvider] = [
+        IPApiProvider(client=request.app.state.http_client),
+        GeoLite2Provider()
+    ]
+
+    return GeolocationService(providers=providers)

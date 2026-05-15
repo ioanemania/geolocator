@@ -40,4 +40,4 @@ def mock_geolocation_service() -> GeolocationService:
     """Return a GeolocationService backed by a mock provider."""
     mock_provider = MagicMock(spec=GeolocationProvider)
     mock_provider.get_by_ip = AsyncMock()
-    return GeolocationService(provider=mock_provider)
+    return GeolocationService(providers=[mock_provider])

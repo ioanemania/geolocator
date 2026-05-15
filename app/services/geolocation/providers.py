@@ -84,6 +84,7 @@ class IPApiProvider(GeolocationProvider):
             timezone=data.get("timezone", ""),
             isp=data.get("isp", ""),
             organization=data.get("org", ""),
+            provider="ip-api",
         )
 
 
@@ -113,4 +114,5 @@ class GeoLite2Provider(GeolocationProvider):
             timezone=record.location.time_zone or "",
             isp="",
             organization="",
+            provider="geolite2",
         )

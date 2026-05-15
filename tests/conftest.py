@@ -1,9 +1,10 @@
-import httpx
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from app.services.geolocation import GeolocationService
+from app.services.geolocation import GeolocationProvider, GeolocationService
 
 IP_API_SUCCESS_PAYLOAD = {
     "status": "success",
@@ -35,7 +36,8 @@ def test_client() -> TestClient:
 
 
 @pytest.fixture()
-def mock_geolocation_service(mocker: pytest.MonkeyPatch) -> GeolocationService:
-    """Return a GeolocationService backed by a mock AsyncClient."""
-    mock_client = mocker.MagicMock(spec=httpx.AsyncClient)
-    return GeolocationService(client=mock_client)
+def mock_geolocation_service() -> GeolocationService:
+    """Return a GeolocationService backed by a mock provider."""
+    mock_provider = MagicMock(spec=GeolocationProvider)
+    mock_provider.get_by_ip = AsyncMock()
+    return GeolocationService(provider=mock_provider)

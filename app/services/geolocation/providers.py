@@ -1,74 +1,33 @@
+from abc import ABC, abstractmethod
+
 import httpx
-from fastapi import Request
 
 from app.config import settings
 from app.models.geolocation import Coordinates, GeolocationResponse
+from app.services.geolocation.errors import (
+    GeolocationNotFoundError,
+    InvalidIPAddressError,
+    RateLimitError,
+    ReservedIPAddressError,
+    UpstreamError,
+    UpstreamTimeoutError,
+)
 
-
-class GeolocationError(Exception):
-    """Base class for geolocation errors."""
-
-    http_status: int
-    error_code: str
-
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        self.message = message
-
-
-class InvalidIPAddressError(GeolocationError):
-    http_status = 400
-    error_code = "INVALID_IP_ADDRESS"
-
-
-class ReservedIPAddressError(GeolocationError):
-    http_status = 400
-    error_code = "RESERVED_IP_ADDRESS"
-
-
-class GeolocationNotFoundError(GeolocationError):
-    http_status = 404
-    error_code = "GEOLOCATION_NOT_FOUND"
-
-
-class RateLimitError(GeolocationError):
-    http_status = 429
-    error_code = "RATE_LIMIT_EXCEEDED"
-
-
-class UpstreamError(GeolocationError):
-    http_status = 502
-    error_code = "UPSTREAM_ERROR"
-
-
-class UpstreamTimeoutError(GeolocationError):
-    http_status = 504
-    error_code = "UPSTREAM_TIMEOUT"
-
-
-_IP_API_FAIL_MESSAGES: dict[str, type[GeolocationError]] = {
+_IP_API_FAIL_MESSAGES: dict[
+    str, type[GeolocationNotFoundError | InvalidIPAddressError | ReservedIPAddressError]
+] = {
     "invalid query": InvalidIPAddressError,
     "private range": ReservedIPAddressError,
     "reserved range": ReservedIPAddressError,
 }
 
 
-def _extract_client_ip(request: Request) -> str:
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
-
-    if request.client:
-        return request.client.host
-
-    raise UpstreamError("Unable to determine client IP address.")
+class GeolocationProvider(ABC):
+    @abstractmethod
+    async def get_by_ip(self, ip: str) -> GeolocationResponse: ...
 
 
-class GeolocationService:
+class IPApiProvider(GeolocationProvider):
     def __init__(self, client: httpx.AsyncClient) -> None:
         self._client = client
 
@@ -113,7 +72,3 @@ class GeolocationService:
             isp=data.get("isp", ""),
             organization=data.get("org", ""),
         )
-
-    async def get_by_request(self, request: Request) -> GeolocationResponse:
-        ip = _extract_client_ip(request)
-        return await self.get_by_ip(ip)

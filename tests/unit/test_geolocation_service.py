@@ -56,7 +56,12 @@ async def test_first_provider_fails_second_succeeds() -> None:
 
 @pytest.mark.parametrize(
     "error",
-    [UpstreamError("down"), UpstreamTimeoutError("timeout"), RateLimitError("rate"), GeolocationNotFoundError("nf")],
+    [
+        UpstreamError("down"),
+        UpstreamTimeoutError("timeout"),
+        RateLimitError("rate"),
+        GeolocationNotFoundError("nf"),
+    ],
 )
 async def test_fallback_triggers_on_recoverable_errors(error: Exception) -> None:
     succeeding = _mock_provider()

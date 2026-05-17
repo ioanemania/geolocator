@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.config import settings
@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
     )
 
     @app.exception_handler(GeolocationError)
-    async def geolocation_error_handler(_request: object, exc: GeolocationError) -> JSONResponse:
+    async def geolocation_error_handler(_request: Request, exc: GeolocationError) -> JSONResponse:
         return JSONResponse(
             status_code=exc.http_status,
             content=ErrorResponse(
